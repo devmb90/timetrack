@@ -1,15 +1,13 @@
 <?php
-declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\Entity\Employee;
 use App\Entity\WorkTime;
+use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-/**
- * @extends ServiceEntityRepository<WorkTime>
- */
 class WorkTimeRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -17,28 +15,30 @@ class WorkTimeRepository extends ServiceEntityRepository
         parent::__construct($registry, WorkTime::class);
     }
 
-//    /**
-//     * @return WorkTime[] Returns an array of WorkTime objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('w')
-//            ->andWhere('w.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('w.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    public function findByEmployeeAndDate(Employee $employee, DateTime $date): array
+    {
+        return $this->createQueryBuilder('w')
+            ->where('w.employee = :employee')
+            ->andWhere('w.workTimeStart = :date')
+            ->setParameter('employee', $employee)
+            ->setParameter('date', $date->format('Y-m-d'))
+            ->getQuery()
+            ->getResult();
+    }
 
-//    public function findOneBySomeField($value): ?WorkTime
-//    {
-//        return $this->createQueryBuilder('w')
-//            ->andWhere('w.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    public function findByEmployeeAndMonth(Employee $employee, DateTime $month): array
+    {
+        $start = clone $month;
+        $end = clone $month;
+        $end->modify('last day of this month');
+
+        return $this->createQueryBuilder('w')
+            ->where('w.employee = :employee')
+            ->andWhere('w.workTimeStart BETWEEN :start AND :end')
+            ->setParameter('employee', $employee)
+            ->setParameter('start', $start->format('Y-m-d'))
+            ->setParameter('end', $end->format('Y-m-d'))
+            ->getQuery()
+            ->getResult();
+    }
 }
